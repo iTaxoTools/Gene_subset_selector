@@ -157,3 +157,12 @@ def write_tsv_output(path: str,header: list, data):
                 liste = [str(x) for x in liste]
                 out.write("\t".join(liste))
                 out.write("\n")
+
+def write_log_file(content: list, directory: str):
+    path = os.path.join(directory, "log.txt")
+    with open(path, "w") as out:
+        for idx,i in enumerate(content):
+            if idx + 1 == len(content):
+                out.write(i)
+            else:
+                out.write(i + "\n")

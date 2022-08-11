@@ -26,7 +26,7 @@ __usage__ = """
 
 """
 
-def get_mean_support(treefile: str):
+def get_mean_support(treefile: str, log_messages: list):
     """
     Calculating the mean support of nodes in a tree. 
     Either of newick or nexus formatted trees.
@@ -50,14 +50,15 @@ def get_mean_support(treefile: str):
     
     if n_nodes and sum_support:
         mean_support = sum_support/n_nodes
+        log_messages.append(str(os.path.basename(treefile)) + " mean support: " + str(mean_support))
     else: 
-        print(str(os.path.basename(treefile)) + " did not give any support values!")
+        log_messages.append("!!!" + str(os.path.basename(treefile)) + " did not give any support values!")
         mean_support = 0.0
 
-    return mean_support
+    return mean_support, log_messages
 
 
-def top_n_files(filenumber: int, data: list, infolder: str, outfolder: str):
+def top_n_files(filenumber: int, data: list, infolder: str, outfolder: str, log_messages: list):
     """
     Getting the top amount of files that have the highest scores.
     Copying and sorting Files from the input directory to the output directory by their corresponding files.
@@ -74,33 +75,64 @@ def top_n_files(filenumber: int, data: list, infolder: str, outfolder: str):
     not_selected = data[filenumber:]
 
     tre_files = glob.glob(os.path.join(infolder, "Trees/*"))
-    fasta_files = glob.glob(os.path.join(infolder, "Fasta/*"))
+    try:
+        fasta_files = glob.glob(os.path.join(infolder, "Fasta/*"))
+    except:
+        sys.exit("Directory with .fasta files 'Fasta' not found")
 
     for file, support in selected:
+        error = False
+        message = file + " files have been moved to selected "
         fasta_out = os.path.join(outfolder,"selected_alignments")
         tre_out = os.path.join(outfolder,"selected_trees")
 
-        fasta_file = [x for x in fasta_files if file in x][0]
-        tre_file = [x for x in tre_files if file in x][0]
+        try:
+            fasta_file = [x for x in fasta_files if file in x][0]
+        except:
+            error = True
+            message = "!!!Did not find " + file + ".fasta"
 
-        fastafilepath = os.path.join(infolder,"Fasta",fasta_file)
-        trefilepath = os.path.join(infolder,"Trees",tre_file)
-        shutil.copy(fastafilepath, fasta_out)
-        shutil.copy(trefilepath, tre_out)
+        try:
+            tre_file = [x for x in tre_files if file in x][0]
+        except:
+            error = True
+            message = "!!!Did not find " + file + ".tre"
+        
+        if not error:
+            fastafilepath = os.path.join(infolder,"Fasta",fasta_file)
+            trefilepath = os.path.join(infolder,"Trees",tre_file)
+            shutil.copy(fastafilepath, fasta_out)
+            shutil.copy(trefilepath, tre_out)
+        
+        log_messages.append(message)
 
     for file, support in not_selected:
+        error = False
+        message = file + " files have been moved to not_selected"
         fasta_out = os.path.join(outfolder,"not_selected_alignments")
         tre_out = os.path.join(outfolder,"not_selected_trees")
+        
+        try:
+            fasta_file = [x for x in fasta_files if file in x][0]
+        except:
+            error = True
+            message = "!!!Did not find " + file + ".fasta"
 
-        fasta_file = [x for x in fasta_files if file in x][0]
-        tre_file = [x for x in tre_files if file in x][0]
+        try:
+            tre_file = [x for x in tre_files if file in x][0]
+        except:
+            error = True
+            message = "!!!Did not find " + file + ".tre"
 
-        fastafilepath = os.path.join(infolder,"Fasta",fasta_file)
-        trefilepath = os.path.join(infolder,"Trees",tre_file)
-        shutil.copy(fastafilepath, fasta_out)
-        shutil.copy(trefilepath, tre_out)
+        if not error:
+            fastafilepath = os.path.join(infolder,"Fasta",fasta_file)
+            trefilepath = os.path.join(infolder,"Trees",tre_file)
+            shutil.copy(fastafilepath, fasta_out)
+            shutil.copy(trefilepath, tre_out)
 
-    return selected
+        log_messages.append(message)
+
+    return selected, log_messages
 
 def __Main__(args):
 
@@ -132,40 +164,53 @@ def __Main__(args):
             shutil.rmtree(path)
         mkdir(path)
 
+    log_messages = []
+
     #### Getting scores #######
     scores = OrderedDict()
     if criterion == "support":
-        tre_files = glob.glob(os.path.join(input, "Trees/*"))
+        log_messages.append("Criterion selected: Tree support")
+        try:
+            tre_files = glob.glob(os.path.join(input, "Trees/*"))
+        except:
+            sys.exit("Directory with .tre files 'Trees' not found")
         for tre in tre_files:
-            mean_support = get_mean_support(tre)
+            mean_support, log_messages = get_mean_support(tre, log_messages)
             name = os.path.splitext(os.path.basename(tre))[0]
             scores[name] = mean_support
 
     elif criterion == "alignment":
+        log_messages.append("Criterion selected: Alignment")
         print("in work")
 
     elif criterion == "missingdata":
+        log_messages.append("Criterion selected: Missingdata")
         print("in work")
 
     elif criterion == "ntaxa":
+        log_messages.append("Criterion selected: N Taxa")
         print("in work")
 
     #### Selecting #########
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     print(sorted_scores)
     if filenumber:
-        selected_scores = top_n_files(filenumber, sorted_scores, input, output)
+        log_messages.append("Selection chosen: filenumber")
+        selected_scores, log_messages = top_n_files(filenumber, sorted_scores, input, output, log_messages)
         coloumns = ["file",criterion + " score"]
         sorted_scores.insert(len(selected_scores),["\nNot selected files:",""])
         Utils.write_tsv_output(os.path.join(output, "file_selection.tsv"), coloumns, sorted_scores)
 
     elif percentage:
+        log_messages.append("Selection chosen: percentage")
         print("in work")
 
     elif cutoff:
+        log_messages.append("Selection chosen: cutoff")
         print("in work")
-
-
+    
+    #### Log file 
+    Utils.write_log_file(log_messages, output)
 
 if "--dir" in sys.argv and "--out" in sys.argv and "--crit" in sys.argv:
     __Main__(sys.argv)
