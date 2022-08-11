@@ -9,7 +9,7 @@ A certain amount of files is selected as the wanted subset of genes.
 
 One input directory is necessary. It should contain a folder called "Fasta" containing all necessary alignment files
 in a fasta format and a folder called "Trees" that contains all corresponding tree files.
-Tree and alignment files have to be named the same (except for the suffix).
+Each corresponding Tree and alignment files have to be named the same (except for the suffix).
 
 ## Running the script
 
