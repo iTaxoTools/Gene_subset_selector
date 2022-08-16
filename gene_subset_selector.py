@@ -2,6 +2,7 @@
 ### David Leisse ###
 ### david.leisse@uni-bielefeld.de ###
 
+import copy
 import Utils
 import dendropy
 from collections import OrderedDict
@@ -71,66 +72,40 @@ def top_n_files(filenumber: int, data: list, infolder: str, outfolder: str, log_
     :return selected: List of selected top files 
     """
 
-    selected = data[:filenumber]
-    not_selected = data[filenumber:]
-
     tre_files = glob.glob(os.path.join(infolder, "Trees/*"))
-    try:
-        fasta_files = glob.glob(os.path.join(infolder, "Fasta/*"))
-    except:
-        sys.exit("Directory with .fasta files 'Fasta' not found")
+    fasta_files = glob.glob(os.path.join(infolder, "Fasta/*"))
+    if not fasta_files:
+        sys.exit("Directory with .fasta files 'Fasta' not found or empty")
+    
+    all_file_list, missmatch_list = Utils.get_corresponding_files(tre_files, fasta_files = fasta_files)
 
-    for file, support in selected:
-        error = False
-        message = file + " files have been moved to selected "
-        fasta_out = os.path.join(outfolder,"selected_alignments")
-        tre_out = os.path.join(outfolder,"selected_trees")
+    iter_list = copy.deepcopy(all_file_list)
+    for basename, support in data:
+        for idx,[file_a, file_b] in enumerate(iter_list):
+            if basename in file_a or basename in file_b:
+                all_file_list[idx].append(support)
 
-        try:
-            fasta_file = [x for x in fasta_files if file in x][0]
-        except:
-            error = True
-            message = "!!!Did not find " + file + ".fasta"
+    all_file_list.sort(reverse=True, key =lambda x: x[2])
 
-        try:
-            tre_file = [x for x in tre_files if file in x][0]
-        except:
-            error = True
-            message = "!!!Did not find " + file + ".tre"
-        
-        if not error:
-            fastafilepath = os.path.join(infolder,"Fasta",fasta_file)
-            trefilepath = os.path.join(infolder,"Trees",tre_file)
-            shutil.copy(fastafilepath, fasta_out)
-            shutil.copy(trefilepath, tre_out)
-        
-        log_messages.append(message)
+    selected = all_file_list[:filenumber]
+    not_selected = all_file_list[filenumber:]
 
-    for file, support in not_selected:
-        error = False
-        message = file + " files have been moved to not_selected"
-        fasta_out = os.path.join(outfolder,"not_selected_alignments")
-        tre_out = os.path.join(outfolder,"not_selected_trees")
-        
-        try:
-            fasta_file = [x for x in fasta_files if file in x][0]
-        except:
-            error = True
-            message = "!!!Did not find " + file + ".fasta"
+    fasta_out_selected = os.path.join(outfolder,"Selected_alignments")
+    tre_out_selected = os.path.join(outfolder,"Selected_trees")
+    fasta_out_not_selected = os.path.join(outfolder,"Not_selected_alignments")
+    tre_out_not_selected = os.path.join(outfolder,"Not_selected_trees")
 
-        try:
-            tre_file = [x for x in tre_files if file in x][0]
-        except:
-            error = True
-            message = "!!!Did not find " + file + ".tre"
+    for entry in all_file_list:
+        if entry in selected:
+            shutil.copy(entry[0], tre_out_selected)
+            shutil.copy(entry[1], fasta_out_selected)
 
-        if not error:
-            fastafilepath = os.path.join(infolder,"Fasta",fasta_file)
-            trefilepath = os.path.join(infolder,"Trees",tre_file)
-            shutil.copy(fastafilepath, fasta_out)
-            shutil.copy(trefilepath, tre_out)
+        elif entry in not_selected:
+            shutil.copy(entry[0], tre_out_not_selected)
+            shutil.copy(entry[1], fasta_out_not_selected)
 
-        log_messages.append(message)
+    for entry in missmatch_list:
+        log_messages.append(str(entry)+ " no corresponding file!!")
 
     return selected, log_messages
 
@@ -170,10 +145,9 @@ def __Main__(args):
     scores = OrderedDict()
     if criterion == "support":
         log_messages.append("Criterion selected: Tree support")
-        try:
-            tre_files = glob.glob(os.path.join(input, "Trees/*"))
-        except:
-            sys.exit("Directory with .tre files 'Trees' not found")
+        tre_files = glob.glob(os.path.join(input, "Trees/*"))
+        if not tre_files:
+            sys.exit("!! Directory with .tre files 'Trees' not found or empty")
         for tre in tre_files:
             mean_support, log_messages = get_mean_support(tre, log_messages)
             name = os.path.splitext(os.path.basename(tre))[0]
@@ -212,8 +186,13 @@ def __Main__(args):
     #### Log file 
     Utils.write_log_file(log_messages, output)
 
+__Main__("--dir /Users/david/Development/Gene_subset_selector-1/test_subset --out /Users/david/Development/Gene_subset_selector-1/test_subset --files 3 --crit support")
+
+
+"""
 if "--dir" in sys.argv and "--out" in sys.argv and "--crit" in sys.argv:
     __Main__(sys.argv)
 
 else:
     print(__usage__)
+    """
