@@ -6,6 +6,8 @@ import dendropy
 from os import mkdir
 from genericpath import isdir
 import os.path
+import itertools
+import re
 
 def load_tree(string: str, mode: str, schema: str) -> dendropy.Tree:
     """
@@ -71,7 +73,7 @@ def write_decont_output(directory: str, file: str, seq_ls: list[str,str], type: 
     if not isdir(output_directory):
         mkdir(output_directory)
 
-    file = output_directory + "/" + file 
+    file = output_directory + "/" + file
 
     with open(file, "w") as out:
         if type == "protein":
@@ -100,7 +102,7 @@ def get_index_in_list(value: any, list: list) -> int:
     else:
         return index
 
-def get_corresponding_files(tre_files: list, ali_files: list, fasta_files: list) -> list:
+def get_corresponding_files(tre_files: list, ali_files:list = [], fasta_files: list = []) -> list:
     """
     Getting all corresponding files to a .tre file. 
     Corresponding files are name similar to .tre file.
@@ -113,23 +115,34 @@ def get_corresponding_files(tre_files: list, ali_files: list, fasta_files: list)
     :return file_list: List of lists containing .tre and corresponding .fasta and .ali files
     """
     file_list = []
+    missmatch_list = []
+
     for tre_file in tre_files:
         temp = []
-        name = os.path.splitext(tre_file)[0].replace("-","_")
+        length = 1
+        name = re.sub(r"[^a-zA-Z0-9\.]+","_",os.path.basename(tre_file).split(".")[0])
         temp.append(tre_file)
 
-        for ali_file in ali_files:
-            ali = os.path.splitext(ali_file)[0].replace("-","_")
-            if ali == name:
-                temp.append(ali_file)
-                
-        for fasta_file in fasta_files:
-            fasta = os.path.splitext(fasta_file)[0].replace("-","_")
-            if fasta == name:
-                temp.append(fasta_file)
-        file_list.append(temp)
+        if ali_files:
+            length += 1
+            for ali_file in ali_files:
+                ali = re.sub(r"[^a-zA-Z0-9\.]+","_",os.path.basename(ali_file))
+                if name in ali:
+                    temp.append(ali_file)
 
-    return file_list
+        if fasta_files:    
+            length += 1  
+            for fasta_file in fasta_files:
+                fasta = re.sub(r"[^a-zA-Z0-9\.]+","_",os.path.basename(fasta_file))
+                if name in fasta:
+                    temp.append(fasta_file)
+        
+        if len(temp) < length:
+            missmatch_list.append(temp)
+        else:
+            file_list.append(temp)
+
+    return file_list, missmatch_list
 
 def write_tsv_output(path: str,header: list, data):
     """
