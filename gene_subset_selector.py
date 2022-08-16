@@ -118,7 +118,7 @@ def __Main__(args):
     output = args[args.index("--out") +1 ]
     criterion = args[args.index("--crit")+1 ]
     
-    filenumber = 0
+    filenumber = None
     percentage = 0
     cutoff = 0
     if "--files" in args:
@@ -168,7 +168,7 @@ def __Main__(args):
     #### Selecting #########
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     print(sorted_scores)
-    if filenumber:
+    if filenumber or filenumber == 0:
         log_messages.append("Selection chosen: filenumber")
         selected_scores, log_messages = top_n_files(filenumber, sorted_scores, input, output, log_messages)
         coloumns = ["file",criterion + " score"]
@@ -186,13 +186,8 @@ def __Main__(args):
     #### Log file 
     Utils.write_log_file(log_messages, output)
 
-__Main__("--dir /Users/david/Development/Gene_subset_selector-1/test_subset --out /Users/david/Development/Gene_subset_selector-1/test_subset --files 3 --crit support")
-
-
-"""
 if "--dir" in sys.argv and "--out" in sys.argv and "--crit" in sys.argv:
     __Main__(sys.argv)
 
 else:
     print(__usage__)
-    """
