@@ -99,13 +99,15 @@ def top_n_files(filenumber: int, data: list, infolder: str, outfolder: str, log_
         if entry in selected:
             shutil.copy(entry[0], tre_out_selected)
             shutil.copy(entry[1], fasta_out_selected)
+            log_messages.append("{} and {} were moved to selected directories".format(os.path.basename(entry[0]),os.path.basename(entry[1])))
 
         elif entry in not_selected:
             shutil.copy(entry[0], tre_out_not_selected)
             shutil.copy(entry[1], fasta_out_not_selected)
+            log_messages.append("{} and {} were moved to not_selected directories".format(os.path.basename(entry[0]),os.path.basename(entry[1])))
 
     for entry in missmatch_list:
-        log_messages.append(str(entry)+ " no corresponding file!!")
+        log_messages.append("{} had a missing corresponding file!!".format(str(entry)))
 
     return selected, log_messages
 
