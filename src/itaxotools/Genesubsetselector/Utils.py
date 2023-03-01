@@ -2,12 +2,11 @@
 ##### David Leiße #####
 ##### david.leisse@uni-bielefeld.de #####
 
-import dendropy
 from os import mkdir
 from genericpath import isdir
 import os.path
-import itertools
 import re
+import dendropy
 
 def load_tree(string: str, mode: str, schema: str) -> dendropy.Tree:
     """

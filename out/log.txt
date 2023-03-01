@@ -1,0 +1,12 @@
+Criterion selected: Tree support
+Examplefile_RAXML.tre mean support: 79.58333333333333
+Examplefile_MEGA.tre mean support: 0.75
+Examplefile_FASTTREE.tre mean support: 0.7506
+!!!Examplefile_MRBAYES.nex did not give any support values!
+Examplefile_PAUP.nex mean support: 71.63079590000001
+Selection chosen: filenumber
+Examplefile_RAXML.tre and Examplefile_RAXML.fas were moved to selected directories
+Examplefile_PAUP.nex and Examplefile_PAUP.fas were moved to selected directories
+Examplefile_FASTTREE.tre and Examplefile_FASTTREE.fas were moved to not_selected directories
+Examplefile_MEGA.tre and Examplefile_MEGA.fas were moved to not_selected directories
+Examplefile_MRBAYES.nex and Examplefile_MRBAYES.fas were moved to not_selected directories
