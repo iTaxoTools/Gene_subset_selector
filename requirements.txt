@@ -1,0 +1,5 @@
+DendroPy==4.5.2
+Genesubsetselector==0.0.1
+pip==23.0.1
+setuptools==67.1.0
+wheel==0.38.4

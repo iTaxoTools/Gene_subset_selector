@@ -3,8 +3,7 @@
 ### david.leisse@uni-bielefeld.de ###
 
 import copy
-import Utils
-import dendropy
+from . import Utils as Utils
 from collections import OrderedDict
 import os.path
 import sys
@@ -188,8 +187,9 @@ def __Main__(args):
     #### Log file 
     Utils.write_log_file(log_messages, output)
 
-if "--dir" in sys.argv and "--out" in sys.argv and "--crit" in sys.argv:
-    __Main__(sys.argv)
+def run():
+    if "--dir" in sys.argv and "--out" in sys.argv and "--crit" in sys.argv:
+        __Main__(sys.argv)
 
-else:
-    print(__usage__)
+    else:
+        print(__usage__)
